@@ -1,6 +1,13 @@
 FROM node:alpine
 
-RUN apk add --update bash && rm -f /var/cache/apk/*
+ENV KUBE_LATEST_VERSION="v1.19.2"
+
+RUN apk add --no-cache ca-certificates bash git openssh-client openssh curl \
+    && wget -q https://storage.googleapis.com/kubernetes-release/release/${KUBE_LATEST_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
+    && chmod +x /usr/local/bin/kubectl \
+    && chmod g+rwx /root \
+    && mkdir /config \
+    && chmod g+rwx /config
 
 WORKDIR /code
 
@@ -13,4 +20,6 @@ COPY . /code/
 
 RUN npm run build
 
-ENTRYPOINT [ "npm", "start" ]
+WORKDIR /config
+
+CMD ["sh"]
