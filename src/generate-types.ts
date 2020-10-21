@@ -4,6 +4,7 @@ import {
 	FetchingJSONSchemaStore,
 	InputData,
 } from 'quicktype-core';
+import prettier from 'prettier';
 import axios from 'axios';
 import minimist from 'minimist';
 import fs from 'fs';
@@ -40,12 +41,20 @@ async function main() {
 
 	const outDir = argv['out'] || '/code/generated/types.ts';
 
-	console.log(lines);
-	console.log(outDir);
-
 	const dirPath = path.dirname(outDir);
 	await fs.promises.mkdir(dirPath, { recursive: true });
-	await fs.promises.writeFile(outDir, lines.join('\n'));
+	const prettierOptions = {
+		parser: 'typescript',
+	};
+	if (argv['prettierrc']) {
+		Object.assign(
+			prettierOptions,
+			prettier.resolveConfig.sync(argv['prettierrc']) || {}
+		);
+	}
+
+	const code = prettier.format(lines.join('\n'), prettierOptions);
+	await fs.promises.writeFile(outDir, code);
 }
 
 main();
